@@ -1,6 +1,6 @@
 print('Downloading install1.lua...')
  
-local url ='https://raw.githubusercontent.com/kepler155c/opus-installer/master/sys/apps/Installer.lua'
+local url ='https://raw.githubusercontent.com/haawwkeye/ComputerCraft_Scripts/main/install1.lua'
 local h = _G.http.get(url)
 if not h then
   error('Failed to download installer')
