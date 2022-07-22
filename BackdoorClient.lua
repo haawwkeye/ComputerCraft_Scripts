@@ -69,7 +69,7 @@ _ENV.string.split = function(inputstr, sep)
         table.insert(t, str)
     end
     return t
-    end
+end
 
 local FileList = fs.list("/DEV/") --Table with all the files and directories available
 
