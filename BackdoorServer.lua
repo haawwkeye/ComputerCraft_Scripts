@@ -14,7 +14,7 @@ local backdoorComps = {}
 local mainport = 1489;
 local modem = peripheral.find("modem") or error("A modem is required");
 
-do -- Backdoor module
+-- do -- Backdoor module
     local Backdoor = {}
     Backdoor.Comps = backdoorComps;
     function Backdoor:Send(CompId, script)
@@ -35,8 +35,8 @@ do -- Backdoor module
             modem.transmit(port, mainport, script or "")
         end
     end
-    _ENV.BackdoorModule = Backdoor; -- Set the ENV
-end
+    _G.BackdoorModule = Backdoor; -- Set the ENV
+-- end
 
 modem.open(mainport); -- This is so the server can request the id
 
