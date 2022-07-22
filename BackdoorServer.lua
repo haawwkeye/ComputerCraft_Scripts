@@ -1,4 +1,6 @@
 --Server for backdoor commands
+if _G.Backdoor then os.reboot() end;
+
 _ENV.string.split = function(inputstr, sep)
     if sep == nil then
         sep = "%s"
@@ -60,9 +62,9 @@ function toBackground()
     shell.run("/rom/programs/advanced/multishell")
 end
 
-function Loop()
-    --İts working only advanced computers...--
-    parallel.waitForAny(toBackground , listen);
-    Loop();
-end
-Loop();
+-- function Loop()
+--     --İts working only advanced computers...--
+--     parallel.waitForAny(toBackground , listen);
+--     Loop();
+-- end
+-- Loop();
