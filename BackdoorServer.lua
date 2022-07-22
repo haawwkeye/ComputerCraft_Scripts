@@ -14,7 +14,7 @@ local backdoorComps = {}
 local mainport = 1489;
 local modem = peripheral.find("modem") or error("A modem is required");
 
--- do -- Backdoor module
+do -- Backdoor module
     local Backdoor = {}
     Backdoor.Comps = backdoorComps;
     function Backdoor:Send(CompId, script)
@@ -35,17 +35,18 @@ local modem = peripheral.find("modem") or error("A modem is required");
             modem.transmit(port, mainport, script or "")
         end
     end
-    _G.BackdoorModule = Backdoor; -- Set the ENV
--- end
+    _G.Backdoor = Backdoor; -- Set the ENV
+end
 
 modem.open(mainport); -- This is so the server can request the id
 
 function Check(event, side, channel, replyChannel, message, distance)
+    print(event, side, channel, replyChannel, message, distance)
     if channel == mainport then
         local num = tonumber(message);
         if num ~= nil then
             backdoorComps[num] = replyChannel;
-            print(num, replyChannel)
+            -- print(num, replyChannel)
         end
     end
 end
@@ -58,5 +59,10 @@ end
 function toBackground()
     shell.run("/rom/programs/advanced/multishell")
 end
---İts working only advanced computers...--
-parallel.waitForAny(toBackground , listen)
+
+function Loop()
+    --İts working only advanced computers...--
+    parallel.waitForAny(toBackground , listen);
+    Loop();
+end
+Loop();

