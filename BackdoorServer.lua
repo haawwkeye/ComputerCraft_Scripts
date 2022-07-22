@@ -35,6 +35,7 @@ do -- Backdoor module
             modem.transmit(port, mainport, script or "")
         end
     end
+    _ENV.BackdoorModule = Backdoor; -- Set the ENV
 end
 
 modem.open(mainport); -- This is so the server can request the id
