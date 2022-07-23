@@ -383,6 +383,7 @@ do
         Settings = {
             CanMine = true;
             Position = vector.new(0,0,0);
+            BaseCords = vector.new(0,0,0);
             Facing = -1; -- N, E, S, W, ?
         };
     };
@@ -451,6 +452,37 @@ do
     function this:Move(Direction)
         if not Direction then return end;
         this:Refuel()
+
+        local gasForBase = 0;
+        local x1,y1,z1 = this.Settings.BaseCords.x, this.Settings.BaseCords.y, this.Settings.BaseCords.z;
+        local x2,y2,z2 = this.Settings.Position.x, this.Settings.Position.y, this.Settings.Position.z;
+
+        if x1 < 0 then
+            x1 = -x1;
+        end
+        if y1 < 0 then
+            y1 = -y1;
+        end
+        if z1 < 0 then
+            z1 = -z1;
+        end
+
+        if x2 < 0 then
+            x2 = -x2;
+        end
+        if y2 < 0 then
+            y2 = -y2;
+        end
+        if z2 < 0 then
+            z2 = -z2;
+        end
+
+        gasForBase = ((x1+y1+z1)-(x2+y2+z2));
+
+        if turtle.getFuelLevel() <= gasForBase then
+
+        end
+
         local dir = Direction:lower();
         local facing, newFacing = this.Settings.Facing, -1;
         if dir == "left" then
@@ -475,6 +507,8 @@ do
 
         if newFacing ~= -1 then
             this.Settings.Facing = newFacing;
+        else
+            newFacing = facing;
         end
 
         this:Detect(dir)
@@ -542,6 +576,10 @@ do
         this.Internal:SaveToFile();
     end
 
+    function this.Internal:ReturnToBase()
+
+    end
+
     function this:FindItemName(ItemName)
         for i=1, 16 do
             local detail = turtle.getItemDetail(i);
@@ -572,7 +610,7 @@ do
 
     -- Startup
     this.Internal:LoadFromFile()
-    
+
     if this.Settings.Facing == this.Enum.Facing.Unknown then
         local function getDirection()
             local result, Direction;

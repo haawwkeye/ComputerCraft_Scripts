@@ -53,18 +53,26 @@ function Check(event, side, channel, replyChannel, message, distance)
     end
 end
 
-function listen()
-    local event, side, channel, replyChannel, message, distance = os.pullEventRaw("modem_message");
-    Check(event, side, channel, replyChannel, message, distance)
-end
+function Loop()
+    parallel.waitForAny(
+        function()
+            local event, side, channel, replyChannel, message, distance = os.pullEventRaw("modem_message");
+            Check(event, side, channel, replyChannel, message, distance)
+        end,
+        function()
+            local myTimer = os.startTimer(30)
 
-function toBackground()
-    shell.run("/rom/programs/advanced/multishell")
-end
+            while true do
+                local myEvent = {os.pullEvent()}
 
--- function Loop()
---     --İts working only advanced computers...--
---     parallel.waitForAny(toBackground , listen);
---     Loop();
--- end
--- Loop();
+                if myEvent[1] == "timer" and myEvent[2] == myTimer then
+                    break
+                elseif myEvent[1] == "char" then
+                    os.pullEvent("yield forever")
+                end
+            end
+        end
+    );
+    Loop();
+end
+Loop();
