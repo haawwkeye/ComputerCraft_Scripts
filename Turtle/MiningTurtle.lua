@@ -12,7 +12,12 @@ do
         if turtle.getFuelLevel() == "unlimited" then
             return
         elseif turtle.getFuelLevel() <= (turtle.getFuelLimit()/2) then
-            self
+            for i=1, 16 do
+                pcall(function()
+                    turtle.select(i)
+                    turtle.refuel(1)
+                end)
+            end
         end
     end
 
