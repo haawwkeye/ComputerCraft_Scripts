@@ -1,6 +1,6 @@
 print('Downloading BackdoorClient.lua...')
  
-local url ='https://raw.githubusercontent.com/haawwkeye/ComputerCraft_Scripts/Ame/BackdoorClient.lua'
+local url ='https://raw.githubusercontent.com/haawwkeye/ComputerCraft_Scripts/Ame/Backdoor/BackdoorClient.lua'
 local h = http.get(url)
 if not h then
   error('Failed to download script')
