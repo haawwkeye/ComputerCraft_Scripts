@@ -367,40 +367,182 @@ do
 end
 
 do
-    local self = {
-        Internal = {};
-        X = 0;
-        Y = 0;
-        Z = 0;
-    };
+    -- Facing
 
-    function self.Internal:LoadFromFile()
+    local this = {
+        Enum = {
+            Facing = {
+                Unknown = -1;
+                North = 1;
+                East = 2;
+                South = 3;
+                West = 4;
+            };
+        };
+        Internal = {};
+        Settings = {
+            CanMine = true;
+            Position = vector.new(0,0,0);
+            Facing = -1; -- N, E, S, W, ?
+        };
+    };
+    
+    function this.Internal:LoadFromFile()
         local file = fs.open(".turtleSettings.json", "r");
-        if not file.readAll then file.readAll = function() return "" end;
-        local content = file.readAll();
-        if content ~= "" then
-            self.Settings = json.decode(content)
+        if not file then
+            this.Internal:SaveToFile();
+            return;
         end
+        if not file.readAll then file.readAll = function() return "" end end;
+        local content = file.readAll();
+        file.close()
+
+        if content ~= "" then
+            local settingsFile = json.decode(content);
+            for i, v in pairs(settingsFile) do
+                this.Settings[i] = v
+            end
+        else
+            this.Internal:SaveToFile() -- New computer so we need to add the save file
+        end
+    end
+
+    function this.Internal:SaveToFile()
+        local file = fs.open(".turtleSettings.json", "w");
+        local content = json.encode(this.Settings);
+        if content ~= "" then
+            file.write(content)
+        end
+        file.close()
     end
 
     -- Cords system
 
-    function self:GetCords()
-        return vector.new(self.X, self.Y, self.Z);
+    function this:GetCords()
+        return this.Settings.Position;
     end
 
-    function self:SetCords(x, y, z)
-        if not x then x = self.X end;
-        if not y then y = self.Y end;
-        if not z then z = self.Z end;
+    function this:SetCords(x, y, z)
+        local pos = this.Settings.Position;
 
-        self.X = x;
-        self.Y = y;
-        self.Z = z;
+        if not x then x = pos.x end;
+        if not y then y = pos.y end;
+        if not z then z = pos.z end;
 
+        this.Settings.Position = vector.new(x,y,z)
     end
 
-    function self:FindItemName(ItemName)
+    function this:Detect(Direction)
+        if not Direction then return end;
+        local dir = Direction:lower();
+        local CanMine = this.Settings.CanMine;
+
+        if not CanMine then return end;
+
+        if dir == "forward" and turtle.detect() == true  then
+            turtle.dig();
+        elseif dir == "up" and turtle.detectUp() == true  then
+            turtle.digUp();
+        elseif dir == "down" and turtle.detectDown() == true then
+            turtle.digDown();
+        end
+    end
+
+    function this:Move(Direction)
+        if not Direction then return end;
+        this:Refuel()
+        local dir = Direction:lower();
+        local facing, newFacing = this.Settings.Facing, -1;
+        if dir == "left" then
+            newFacing = facing - 1;
+        elseif dir == "right" then
+            newFacing = facing + 1;
+        elseif dir == "north" then
+            newFacing = 1;
+        elseif dir == "east" then
+            newFacing = 2;
+        elseif dir == "south" then
+            newFacing = 3;
+        elseif dir == "west" then
+            newFacing = 4;
+        end
+
+        if newFacing == 0 then
+            newFacing = 4;
+        elseif newFacing == 5 then
+            newFacing = 1;
+        end
+
+        if newFacing ~= -1 then
+            this.Settings.Facing = newFacing;
+        end
+
+        this:Detect(dir)
+
+        if dir == "left" then
+            turtle.turnLeft()
+        elseif dir == "right" then
+            turtle.turnRight()
+        elseif dir == "forward" then
+            local success = turtle.forward()
+            if success then
+                if facing == 1 then
+                    this:SetCords(nil,nil,this.Settings.Position.z - 1);
+                elseif facing == 2 then
+                    this:SetCords(this.Settings.Position.x + 1,nil,nil);
+                elseif facing == 3 then
+                    this:SetCords(nil,nil,this.Settings.Position.z - 1);
+                elseif facing == 4 then
+                    this:SetCords(this.Settings.Position.x - 1,nil,nil);
+                end
+            end
+        elseif dir == "backward" then
+            local success = turtle.back()
+            if success then
+                if facing == 1 then
+                    this:SetCords(nil,nil,this.Settings.Position.z + 1);
+                elseif facing == 2 then
+                    this:SetCords(this.Settings.Position.x - 1,nil,nil);
+                elseif facing == 3 then
+                    this:SetCords(nil,nil,this.Settings.Position.z + 1);
+                elseif facing == 4 then
+                    this:SetCords(this.Settings.Position.x + 1,nil,nil);
+                end
+            end
+        elseif dir == "up" then
+            local success = turtle.up()
+            if success then
+                this:SetCords(nil,this.Settings.Position.y + 1,nil);
+            end
+        elseif dir == "down" then
+            local success = turtle.down()
+            if success then
+                this:SetCords(nil,this.Settings.Position.y - 1,nil);
+            end
+        else
+            if facing ~= newFacing then
+                if newFacing > facing then
+                    local enum = facing;
+                    for i=facing, newFacing do
+                        enum = enum + 1;
+                        turtle.turnRight()
+                    end
+                    print(enum, newFacing, facing)
+                elseif newFacing < facing then
+                    local enum = facing;
+                    for i=newFacing, facing do
+                        enum = enum - 1;
+                        turtle.turnLeft()
+                    end
+                    print(enum, newFacing, facing)
+                end
+            end
+        end
+
+        this.Internal:SaveToFile();
+    end
+
+    function this:FindItemName(ItemName)
         for i=1, 16 do
             local detail = turtle.getItemDetail(i);
             if detail ~= nil then
@@ -410,7 +552,7 @@ do
         end
     end
 
-    function self:Refuel()
+    function this:Refuel()
         if turtle.getFuelLevel() == "unlimited" then
             return
         -- The reason why we do Fuel Limit/2 is just so we don't waste resources
@@ -426,5 +568,58 @@ do
         end
     end
 
-    _G.TurtleApi = self;
+    _G.TurtleApi = this;
+
+    -- Startup
+    this.Internal:LoadFromFile()
+    
+    if this.Settings.Facing == this.Enum.Facing.Unknown then
+        local function getDirection()
+            local result, Direction;
+
+            parallel.waitForAny(
+                function()
+                    io.write("Please enter the direction I'm facing\n")
+                    result = io.read()
+                end,
+                function()
+                    local myTimer = os.startTimer(30)
+
+                    while true do
+                        local myEvent = {os.pullEvent()}
+
+                        if myEvent[1] == "timer" and myEvent[2] == myTimer then
+                            break
+                        elseif myEvent[1] == "char" then
+                            os.pullEvent("yield forever")
+                        end
+                    end
+                end
+            )
+
+            if result then
+                local res = result:lower();
+                if res == "n" or res == "north" then
+                    Direction = 1;
+                elseif res == "e" or res == "east" then
+                    Direction = 2;
+                elseif res == "s" or res == "south" then
+                    Direction = 3;
+                elseif res == "w" or res == "west" then
+                    Direction = 4;
+                else
+                    print("Invaild Direction\nVaild Directions: North, East, South, West")
+                    return getDirection();
+                end
+            else
+                print("No input found.\nDefaulting to North")
+                Direction = 1; -- This is the default since we Don't know the real direction!
+            end
+
+            return Direction
+        end
+        local Dir = getDirection();
+        this.Settings.Facing = Dir;
+        this.Internal:SaveToFile();
+    end
 end
