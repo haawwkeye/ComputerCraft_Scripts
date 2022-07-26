@@ -1,3 +1,5 @@
+_G.___DebugEnabled = true; -- Add debug for now
+
 do
     -- Extend the table func
     _ENV.table.create = function(count, value)
@@ -1594,7 +1596,7 @@ do
         term.setCursorPos(5,10)
         io.write("Username: ")
 
-        username = io.read();
+        local user = read();
 
         term.clear()
         term.setCursorPos(10,5)
@@ -1602,7 +1604,7 @@ do
         print("This Machine has been locked")
         
         term.setCursorPos(5,10)
-        io.write("Username: "..tostring(username))
+        io.write("Username: "..tostring(user))
         term.setCursorPos(5,15)
         io.write("Password: ")
         local pass = read("*")
@@ -1613,26 +1615,52 @@ do
         print("This Machine has been locked")
         
         term.setCursorPos(5,10)
-        print("Checking...")
+        io.write("Checking Info...")
 
         local success, err = PasswordApi:CheckPassForUser(user, pass);
 
         if not success then
-            print(err)
             sleep(1)
-            PasswordApi:Startup()
+            term.setCursorPos(5,15)
+            io.write(err)
+            sleep(1)
+            if not _G.___DebugEnabled then -- Cause I need to debug this and I can't terminate it so
+                PasswordApi:Startup()
+            else
+                term.setCursorPos(5,16)
+                io.write("Terminated due to debug!")
+                term.setCursorPos(5,17)
+            end;
+        else
+            term.clear()
+            term.setCursorPos(0,0)
         end
 
-        os.pullEvent = old;
+        os.pullEvent = PasswordApi.oldPull;
     end
 
     function PasswordApi:CheckPassForUser(user, pass)
+        if user == nil then return false, "Username cannot be nil" end; 
         local u, p = tostring(user), tostring(pass);
+        term.setCursorPos(5,11)
+        io.write(u, ", ", p, ", ", pass)
         if fs.exists("/.PasswordApi/usr/"..u..".PASS") then
             local hashedFile = fs.open("/.PasswordApi/usr/"..u..".PASS", "r");
             local hashed = hashedFile.readAll();
             hashedFile.close();
-            if HashLib.sha256(p) == hashed then
+
+            local newHash = pass;
+
+            if pass ~= "" then
+                newHash = HashLib.sha256(p);
+            else
+                pass = "N/A"
+            end
+
+            term.setCursorPos(5,12)
+            io.write(newHash, ", ", hashed);
+
+            if (newHash == hashed) then
                 return true
             end
         end
