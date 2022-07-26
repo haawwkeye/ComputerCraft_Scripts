@@ -1,3 +1,18 @@
+-- Version
+
+local CheckVersion = ...
+local this = {
+    _VERSION = "0.0.1";
+}
+
+
+do
+    if CheckVersion then
+        print(this._VERSION)
+        return this._VERSION;
+    end
+end
+
 -- Json Lib
 do
     local json = { _version = "0.1.2" }
@@ -369,7 +384,8 @@ end
 do
     -- Facing
 
-    local this = {
+    this = {
+        _VERSION = this._VERSION;
         Enum = {
             Facing = {
                 Unknown = -1;
@@ -449,8 +465,10 @@ do
         end
     end
 
-    function this:Move(Direction)
+    function this:Move(Direction, goingToBase)
         if not Direction then return end;
+        if not goingToBase then goingToBase = false end;
+        print(turtle.getFuelLevel().."/"..turtle.getFuelLimit())
         this:Refuel()
 
         local gasForBase = 0;
@@ -477,10 +495,12 @@ do
             z2 = -z2;
         end
 
-        gasForBase = ((x1+y1+z1)-(x2+y2+z2));
+        gasForBase = ((x2+y2+z2)-(x1+y1+z1));
 
-        if turtle.getFuelLevel() <= gasForBase then
+        print(gasForBase .."\n".. x1, y1, z1  .."\n".. x2, y2, z2)
 
+        if turtle.getFuelLevel() <= gasForBase and not goingToBase then
+            return;
         end
 
         local dir = Direction:lower();
