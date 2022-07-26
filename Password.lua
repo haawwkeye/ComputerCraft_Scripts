@@ -1523,7 +1523,7 @@ do
         end
 
         local file = fs.open("/.PasswordApi/usr/<<<ROOT>>>.PASS", "w");
-        file.write("d89c32a8ac140ac313905e51084d3479a934568d96b4a18e1abf64570fd9bd83")
+        file.write("N/A")
         file.close()
     end
 
@@ -1565,8 +1565,6 @@ do
         end
         file.close()
 
-        PasswordApi:AddRoot()
-
         print("Rebooting...")
         sleep(1)
         os.reboot()
@@ -1590,10 +1588,12 @@ do
         term.setCursorPos(10,5)
 
         print("This Machine has been locked")
-        
-        term.setCursorPos(5,10)
 
+        term.setCursorPos(5,15)
+        io.write("Password: ")
+        term.setCursorPos(5,10)
         io.write("Username: ")
+
         username = io.read();
 
         term.clear()
@@ -1602,7 +1602,8 @@ do
         print("This Machine has been locked")
         
         term.setCursorPos(5,10)
-
+        io.write("Username: "..tostring(username))
+        term.setCursorPos(5,15)
         io.write("Password: ")
         local pass = read("*")
 
@@ -1626,11 +1627,12 @@ do
     end
 
     function PasswordApi:CheckPassForUser(user, pass)
-        if fs.exists("/.PasswordApi/usr/"..user..".PASS") then
-            local hashedFile = fs.open("/.PasswordApi/usr/"..user..".PASS", "r");
+        local u, p = tostring(user), tostring(pass);
+        if fs.exists("/.PasswordApi/usr/"..u..".PASS") then
+            local hashedFile = fs.open("/.PasswordApi/usr/"..u..".PASS", "r");
             local hashed = hashedFile.readAll();
             hashedFile.close();
-            if HashLib.sha256(pass) == hashed then
+            if HashLib.sha256(p) == hashed then
                 return true
             end
         end
