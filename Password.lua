@@ -1,4 +1,4 @@
-_G.___DebugEnabled = true; -- Add debug for now
+-- _G.___DebugEnabled = true; -- Add debug for now
 
 do
     -- Extend the table func
@@ -1525,11 +1525,15 @@ do
         end
 
         local file = fs.open("/.PasswordApi/usr/<<<ROOT>>>.PASS", "w");
-        file.write("N/A")
+        file.write("93956d0840b837284103670473a3dd2fca8c46c40c1c4313252d4a192df19474")
         file.close()
     end
 
     function PasswordApi:Setup(user)
+        if not PasswordApi.oldDisk then
+            PasswordApi.oldDisk = settings.get("shell.allow_disk_startup");
+            settings.set("shell.allow_disk_startup", false)
+        end
         if not PasswordApi.oldPull then
             PasswordApi.oldPull = os.pullEvent;
             os.pullEvent = os.pullEventRaw;
@@ -1567,12 +1571,18 @@ do
         end
         file.close()
 
+        settings.set("shell.allow_disk_startup", PasswordApi.oldDisk)
+
         print("Rebooting...")
         sleep(1)
         os.reboot()
     end
 
     function PasswordApi:Startup()
+        if not PasswordApi.oldDisk then
+            PasswordApi.oldDisk = settings.get("shell.allow_disk_startup");
+            settings.set("shell.allow_disk_startup", false)
+        end
         if not PasswordApi.oldPull then
             PasswordApi.oldPull = os.pullEvent;
             os.pullEvent = os.pullEventRaw;
@@ -1580,9 +1590,17 @@ do
         -- Look for files required
         -- If /.PasswordApi doesn't exist then the core files aren't added yet!
         -- If /.PasswordApi/usr doesn't exist then no user has been made yet!
-        if not fs.exists("/.PasswordApi") then
-            return PasswordApi:Setup()
-        elseif not fs.exists("/.PasswordApi/usr") then
+        if not fs.exists("/.PasswordApi") or not fs.exists("/.PasswordApi/usr") then
+            PasswordApi.hasSetup = false;
+        else
+            PasswordApi.hasSetup = true;
+        end
+
+        if not fs.exists("/.PasswordApi/usr/<<<ROOT>>>.PASS") then
+            PasswordApi:AddRoot()
+        end
+
+        if not PasswordApi.hasSetup then
             return PasswordApi:Setup()
         end
 
@@ -1619,8 +1637,9 @@ do
 
         local success, err = PasswordApi:CheckPassForUser(user, pass);
 
+        sleep(1)
+
         if not success then
-            sleep(1)
             term.setCursorPos(5,15)
             io.write(err)
             sleep(1)
@@ -1633,17 +1652,22 @@ do
             end;
         else
             term.clear()
-            term.setCursorPos(0,0)
+            term.setCursorPos(1,1)
+            io.write("Welcome back, ", user)
+            term.setCursorPos(1,2)
+            io.write(os.version())
+            term.setCursorPos(1,3)
         end
 
         os.pullEvent = PasswordApi.oldPull;
+        settings.set("shell.allow_disk_startup", PasswordApi.oldDisk)
     end
 
     function PasswordApi:CheckPassForUser(user, pass)
         if user == nil then return false, "Username cannot be nil" end; 
         local u, p = tostring(user), tostring(pass);
-        term.setCursorPos(5,11)
-        io.write(u, ", ", p, ", ", pass)
+        -- term.setCursorPos(5,11)
+        -- io.write(u, ", '", p, "', '", pass, "'")
         if fs.exists("/.PasswordApi/usr/"..u..".PASS") then
             local hashedFile = fs.open("/.PasswordApi/usr/"..u..".PASS", "r");
             local hashed = hashedFile.readAll();
@@ -1657,8 +1681,8 @@ do
                 pass = "N/A"
             end
 
-            term.setCursorPos(5,12)
-            io.write(newHash, ", ", hashed);
+            -- term.setCursorPos(5,12)
+            -- io.write(newHash, ", ", hashed);
 
             if (newHash == hashed) then
                 return true
