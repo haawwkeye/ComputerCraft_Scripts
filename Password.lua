@@ -1,4 +1,4 @@
--- _G.___DebugEnabled = true; -- Add debug for now
+-- _G.___DebugEnabled = false; -- Add debug for now
 
 do
     -- Extend the table func
@@ -1524,8 +1524,8 @@ do
             fs.makeDir("/.PasswordApi/usr/");
         end
 
-        local file = fs.open("/.PasswordApi/usr/<<<ROOT>>>.PASS", "w");
-        file.write("93956d0840b837284103670473a3dd2fca8c46c40c1c4313252d4a192df19474")
+        local file = fs.open("/.PasswordApi/usr/ROOT.PASS", "w");
+        file.write("return {user = \"ROOT\", hashed = \"93956d0840b837284103670473a3dd2fca8c46c40c1c4313252d4a192df19474\"}")
         file.close()
     end
 
@@ -1538,19 +1538,55 @@ do
             PasswordApi.oldPull = os.pullEvent;
             os.pullEvent = os.pullEventRaw;
         end
+        PasswordApi:AddRoot()
+        term.clear()
+        term.setCursorPos(10,5)
+
+        print("Setup password")
+        
         local username;
         if user ~= nil then
+            term.setCursorPos(5,10)
             io.write("Username: " .. tostring(user).."\n")
+            
             username = tostring(user);
         else
+            term.setCursorPos(5,15)
+            io.write("Password: ")
+            
+            term.setCursorPos(5,10)
             io.write("Username: ")
+            
             username = io.read();
+            
+            term.clear()
+            term.setCursorPos(10,5)
+
+            print("Setup password")
+            
+            term.setCursorPos(5,10)
+            io.write("Username: "..tostring(username))
         end
+        if fs.exists("/.PasswordApi/usr/"..username..".PASS") then
+            term.setCursorPos(5,15)
+            io.write("Password: ")
+
+            term.setCursorPos(5,11)
+            io.write("Username is already taken!")
+            
+            sleep(1)
+            
+            return PasswordApi:Setup(nil);
+        end
+        
+        term.setCursorPos(5,15)
         io.write("Password: ")
         local password = read("*");
 
         if (password:len() < 4 and password:upper() ~= "N/A") then
-            print("The Password must be longer then 4 characters")
+            term.setCursorPos(5,16)
+            io.write("The Password must be longer then 4 characters")
+            sleep(1)
             return PasswordApi:Setup(username)
         -- elseif password:upper() == "N/A" then
         --     print("Are you sure you want to enter no password?\n")
@@ -1564,11 +1600,13 @@ do
         end
 
         local file = fs.open("/.PasswordApi/usr/"..username..".PASS", "w");
+        local pass;
         if password:upper() == "N/A" then
-            file.write("None")
+            pass = "N/A"
         else
-            file.write(HashLib.sha256(password))
+            pass = HashLib.sha256(password)
         end
+        file.write("return {user = \""..username.."\", hashed = \""..pass.."\"}")
         file.close()
 
         settings.set("shell.allow_disk_startup", PasswordApi.oldDisk)
@@ -1596,7 +1634,7 @@ do
             PasswordApi.hasSetup = true;
         end
 
-        if not fs.exists("/.PasswordApi/usr/<<<ROOT>>>.PASS") then
+        if PasswordApi.hasSetup and not fs.exists("/.PasswordApi/usr/ROOT.PASS") then
             PasswordApi:AddRoot()
         end
 
@@ -1643,13 +1681,13 @@ do
             term.setCursorPos(5,15)
             io.write(err)
             sleep(1)
-            if not _G.___DebugEnabled then -- Cause I need to debug this and I can't terminate it so
-                PasswordApi:Startup()
-            else
+            -- if not _G.___DebugEnabled then -- Cause I need to debug this and I can't terminate it so
+            --     PasswordApi:Startup()
+            -- else
                 term.setCursorPos(5,16)
                 io.write("Terminated due to debug!")
-                term.setCursorPos(5,17)
-            end;
+                term.setCursorPos(1,17)
+            -- end;
         else
             term.clear()
             term.setCursorPos(1,1)
@@ -1669,10 +1707,16 @@ do
         -- term.setCursorPos(5,11)
         -- io.write(u, ", '", p, "', '", pass, "'")
         if fs.exists("/.PasswordApi/usr/"..u..".PASS") then
-            local hashedFile = fs.open("/.PasswordApi/usr/"..u..".PASS", "r");
-            local hashed = hashedFile.readAll();
-            hashedFile.close();
-
+            local userFile = {
+                user = u.."_N/A";
+                pass = p.."_N/A";
+            }
+            local temp = fs.open("/.PasswordApi/usr/"..u..".PASS", "r");
+            pcall(function()
+                userFile = loadstring(temp.readAll())();
+            end)
+            temp.close();
+            local hashed = userFile.hashed;
             local newHash = pass;
 
             if pass ~= "" then
@@ -1684,7 +1728,7 @@ do
             -- term.setCursorPos(5,12)
             -- io.write(newHash, ", ", hashed);
 
-            if (newHash == hashed) then
+            if (u == userFile.user) and (newHash == hashed) then
                 return true
             end
         end
