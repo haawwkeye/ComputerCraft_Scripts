@@ -1713,6 +1713,7 @@ do
             }
             local temp = fs.open("/.PasswordApi/usr/"..u..".PASS", "r");
             pcall(function()
+---@diagnostic disable-next-line: deprecated
                 userFile = loadstring(temp.readAll())();
             end)
             temp.close();
