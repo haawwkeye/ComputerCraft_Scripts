@@ -454,7 +454,7 @@ do
         local dir = Direction:lower();
         local CanMine = this.Settings.CanMine;
 
-        if not CanMine then return end;
+        if not CanMine then return false end;
 
         if dir == "forward" and turtle.detect() == true  then
             turtle.dig();
@@ -463,6 +463,7 @@ do
         elseif dir == "down" and turtle.detectDown() == true then
             turtle.digDown();
         end
+        return true
     end
 
     function this:Move(Direction, goingToBase)
