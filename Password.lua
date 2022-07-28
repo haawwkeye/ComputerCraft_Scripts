@@ -1611,7 +1611,9 @@ do
 
         settings.set("shell.allow_disk_startup", PasswordApi.oldDisk)
 
-        print("Rebooting...")
+        term.setCursorPos(5,16)
+
+        io.write("Rebooting...")
         sleep(1)
         os.reboot()
     end
@@ -1682,11 +1684,11 @@ do
             io.write(err)
             sleep(1)
             -- if not _G.___DebugEnabled then -- Cause I need to debug this and I can't terminate it so
-            --     PasswordApi:Startup()
+                PasswordApi:Startup()
             -- else
-                term.setCursorPos(5,16)
-                io.write("Terminated due to debug!")
-                term.setCursorPos(1,17)
+            --     term.setCursorPos(5,16)
+            --     io.write("Terminated due to debug!")
+            --     term.setCursorPos(1,17)
             -- end;
         else
             term.clear()

